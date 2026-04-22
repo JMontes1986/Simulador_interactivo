@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Float, Html, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -309,22 +309,32 @@ export default function App() {
   const [phase, setPhase] = useState("sistole");
   const [intensity, setIntensity] = useState(1);
   const [opacityHint, setOpacityHint] = useState(82);
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
 
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const isTablet = viewportWidth <= 1100;
+  const isMobile = viewportWidth <= 760;
+  
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at top, rgba(36,99,235,0.14), transparent 20%), linear-gradient(180deg, #020617 0%, #07111d 100%)", color: "white", fontFamily: "Inter, Arial, sans-serif", padding: 20 }}>
+    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at top, rgba(36,99,235,0.14), transparent 20%), linear-gradient(180deg, #020617 0%, #07111d 100%)", color: "white", fontFamily: "Inter, Arial, sans-serif", padding: isMobile ? 12 : 20 }}>
       <div style={{ maxWidth: 1500, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.85fr", gap: 20, marginBottom: 20 }}>
-          <div style={{ background: "rgba(7,11,18,0.92)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, padding: 22, boxShadow: "0 25px 70px rgba(0,0,0,0.35)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isTablet ? "1fr" : "1.15fr 0.85fr", gap: 20, marginBottom: 20 }}>
+          <div style={{ background: "rgba(7,11,18,0.92)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, padding: isMobile ? 16 : 22, boxShadow: "0 25px 70px rgba(0,0,0,0.35)" }}>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
               <span style={{ background: "rgba(59,130,246,0.16)", color: "#cbe7ff", border: "1px solid rgba(59,130,246,0.18)", padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>Simulador médico 3D</span>
               <span style={{ background: "rgba(255,255,255,0.06)", color: "#d4deeb", border: "1px solid rgba(255,255,255,0.08)", padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>Interactivo y desplegable</span>
             </div>
-            <h1 style={{ margin: 0, fontSize: 44, lineHeight: 1.05, letterSpacing: -1.2 }}>Simulador anatómico 3D realista</h1>
-            <p style={{ color: "#9eb0c6", fontSize: 16, lineHeight: 1.7, maxWidth: 800 }}>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 34 : 44, lineHeight: 1.05, letterSpacing: -1.2 }}>Simulador anatómico 3D realista</h1>
+            <p style={{ color: "#9eb0c6", fontSize: isMobile ? 15 : 16, lineHeight: 1.7, maxWidth: 800 }}>
               Esta versión elimina las dependencias que suelen causar error con aliases o modelos remotos. Ya incluye interacción real: rotación libre, zoom, capas, corte conceptual, vasos, malla geométrica y visual biomédica lista para GitHub y Vercel.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 12 }}>
             <Metric label="Órgano activo" value={organ === "heart" ? "Corazón" : "Hígado"} />
             <Metric label="Motor" value="React Three Fiber" />
             <Metric label="Interacción" value="Rotar · zoom" />
@@ -332,8 +342,8 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 20 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isTablet ? "1fr" : "320px 1fr", gap: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, order: isTablet ? 2 : 1 }}>
             <Panel title="Órgano">
               <div style={{ display: "flex", gap: 8 }}>
                 <ButtonTab active={organ === "heart"} onClick={() => setOrgan("heart")}>Corazón</ButtonTab>
@@ -374,12 +384,12 @@ export default function App() {
             </Panel>
           </div>
 
-          <div style={{ display: "grid", gridTemplateRows: "1fr auto", gap: 16 }}>
-            <div style={{ minHeight: 760, background: `linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015)), rgba(6,10,18,${opacityHint / 100})`, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 70px rgba(0,0,0,0.35)" }}>
+         <div style={{ display: "grid", gridTemplateRows: "1fr auto", gap: 16, order: 1 }}>
+            <div style={{ minHeight: isMobile ? 420 : isTablet ? 560 : 760, background: `linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015)), rgba(6,10,18,${opacityHint / 100})`, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, overflow: "hidden", boxShadow: "0 25px 70px rgba(0,0,0,0.35)" }}>
               <AnatomyScene organ={organ} cutaway={cutaway} wireframe={wireframe} showVessels={showVessels} autoRotate={autoRotate} phase={phase} intensity={intensity} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
               <Metric label="Rotación" value="Arrastrar" />
               <Metric label="Zoom" value="Rueda" />
               <Metric label="Paneo" value="Click derecho" />
